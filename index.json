@@ -1,0 +1,152 @@
+{
+  "sample": [
+    {
+      "doc_id": "sample.html",
+      "tf": 2
+    }
+  ],
+  "document": [
+    {
+      "doc_id": "sample.html",
+      "tf": 3
+    }
+  ],
+  "information": [
+    {
+      "doc_id": "sample.html",
+      "tf": 1
+    }
+  ],
+  "analysis": [
+    {
+      "doc_id": "sample.html",
+      "tf": 1
+    }
+  ],
+  "this": [
+    {
+      "doc_id": "sample.html",
+      "tf": 1
+    }
+  ],
+  "is": [
+    {
+      "doc_id": "sample.html",
+      "tf": 1
+    }
+  ],
+  "a": [
+    {
+      "doc_id": "sample.html",
+      "tf": 1
+    }
+  ],
+  "for": [
+    {
+      "doc_id": "sample.html",
+      "tf": 1
+    }
+  ],
+  "testing": [
+    {
+      "doc_id": "sample.html",
+      "tf": 1
+    }
+  ],
+  "the": [
+    {
+      "doc_id": "sample.html",
+      "tf": 3
+    }
+  ],
+  "inverted": [
+    {
+      "doc_id": "sample.html",
+      "tf": 1
+    }
+  ],
+  "index": [
+    {
+      "doc_id": "sample.html",
+      "tf": 3
+    }
+  ],
+  "builder": [
+    {
+      "doc_id": "sample.html",
+      "tf": 1
+    }
+  ],
+  "extracts": [
+    {
+      "doc_id": "sample.html",
+      "tf": 1
+    }
+  ],
+  "text": [
+    {
+      "doc_id": "sample.html",
+      "tf": 1
+    }
+  ],
+  "and": [
+    {
+      "doc_id": "sample.html",
+      "tf": 2
+    }
+  ],
+  "counts": [
+    {
+      "doc_id": "sample.html",
+      "tf": 1
+    }
+  ],
+  "term": [
+    {
+      "doc_id": "sample.html",
+      "tf": 1
+    }
+  ],
+  "frequency": [
+    {
+      "doc_id": "sample.html",
+      "tf": 2
+    }
+  ],
+  "each": [
+    {
+      "doc_id": "sample.html",
+      "tf": 1
+    }
+  ],
+  "token": [
+    {
+      "doc_id": "sample.html",
+      "tf": 1
+    }
+  ],
+  "appears": [
+    {
+      "doc_id": "sample.html",
+      "tf": 1
+    }
+  ],
+  "in": [
+    {
+      "doc_id": "sample.html",
+      "tf": 1
+    }
+  ],
+  "with": [
+    {
+      "doc_id": "sample.html",
+      "tf": 1
+    }
+  ],
+  "its": [
+    {
+      "doc_id": "sample.html",
+      "tf": 1
+    }
+  ]
+}
