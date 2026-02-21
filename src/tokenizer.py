@@ -5,10 +5,13 @@ Supports stemming (Porter) and extraction of important tokens (title, h1-h3, str
 """
 
 import re
+import warnings
 from pathlib import Path
 
 try:
-    from bs4 import BeautifulSoup
+    from bs4 import BeautifulSoup, XMLParsedAsHTMLWarning, MarkupResemblesLocatorWarning
+    warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
+    warnings.filterwarnings("ignore", category=MarkupResemblesLocatorWarning)
 except ImportError:
     BeautifulSoup = None
 
