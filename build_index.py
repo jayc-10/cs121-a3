@@ -2,18 +2,15 @@
 Build inverted index and output analytics for Milestone 1 report.
 
 Usage:
-    python build_index.py [--source {analyst|developer|both}]
+    python build_index.py
 
-Place HTML files in:
-  - data/information_analyst/   (small collection)
-  - data/algorithms_developer/  (larger collection)
+Extract developer.zip into the data/ folder, then run this script.
 
 Output:
   - index.json in the project root
   - Analytics table printed to console (copy to your PDF report)
 """
 
-import argparse
 import json
 import sys
 from pathlib import Path
@@ -29,13 +26,8 @@ def get_index_path() -> Path:
 
 
 def main() -> None:
+    import argparse
     parser = argparse.ArgumentParser(description="Build inverted index for MS1")
-    parser.add_argument(
-        "--source",
-        choices=["analyst", "developer", "both"],
-        default="both",
-        help="Data source(s) to index (default: both)",
-    )
     parser.add_argument(
         "--output",
         type=Path,
@@ -45,25 +37,16 @@ def main() -> None:
     args = parser.parse_args()
 
     base = Path(__file__).resolve().parent
-    analyst_dir = base / "data" / "information_analyst"
-    developer_dir = base / "data" / "algorithms_developer"
+    data_dir = base / "data"
 
-    dirs_to_index: list[Path] = []
-    if args.source in ("analyst", "both"):
-        dirs_to_index.append(analyst_dir)
-    if args.source in ("developer", "both"):
-        dirs_to_index.append(developer_dir)
-
-    existing = [d for d in dirs_to_index if d.exists()]
-    if not existing:
-        print("No data directories found. Create data/information_analyst/ and/or")
-        print("data/algorithms_developer/ and add .html files.")
+    if not data_dir.exists():
+        print("No data folder found. Extract developer.zip into the data/ folder.")
         sys.exit(1)
 
-    index, doc_ids = build_index_from_directories(*dirs_to_index)
+    index, doc_ids = build_index_from_directories(data_dir)
 
     if not doc_ids:
-        print("No HTML files found in the data directories.")
+        print("No HTML files found in the data/ folder. Extract developer.zip into data/.")
         sys.exit(1)
 
     # Serialize and save index

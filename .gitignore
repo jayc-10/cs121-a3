@@ -1,0 +1,19 @@
+# Data (extracted from developer.zip - do not commit)
+data/
+
+# Generated index
+index.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

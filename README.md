@@ -8,14 +8,9 @@ CS 121 Assignment 3 - Inverted index builder for HTML document collections.
 pip install -r requirements.txt
 ```
 
-## Data Sources
+## Data
 
-Place your HTML files in:
-
-- **Small collection**: `data/information_analyst/`
-- **Larger collection**: `data/algorithms_developer/`
-
-A minimal `sample.html` is included for testing.
+Extract `developer.zip` into the `data/` folder. The script will recursively find all HTML files (e.g. `data/DEV/.../*.html`).
 
 ## Build the Index
 
@@ -25,10 +20,7 @@ python build_index.py
 
 Options:
 
-- `--source analyst`   Index only information analyst collection
-- `--source developer` Index only algorithms developer collection  
-- `--source both`      Index both (default)
-- `--output path`      Custom output path for `index.json`
+- `--output path`   Custom output path for `index.json`
 
 ## Output
 
@@ -46,9 +38,7 @@ Copy the analytics table into your report.
 a3/
 ├── build_index.py      # Main script
 ├── requirements.txt
-├── data/
-│   ├── information_analyst/   # Small HTML collection
-│   └── algorithms_developer/  # Larger HTML collection
+├── data/               # Extract developer.zip here
 ├── src/
 │   ├── tokenizer.py    # HTML parsing, tokenization
 │   ├── posting.py      # Posting & InvertedIndex
