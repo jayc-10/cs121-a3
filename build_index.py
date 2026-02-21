@@ -46,7 +46,7 @@ def main() -> None:
     index, doc_ids = build_index_from_directories(data_dir)
 
     if not doc_ids:
-        print("No HTML files found in the data/ folder. Extract developer.zip into data/.")
+        print("No HTML or JSON document files found in the data/ folder. Extract developer.zip into data/.")
         sys.exit(1)
 
     # Serialize and save index

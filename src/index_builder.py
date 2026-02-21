@@ -2,11 +2,29 @@
 Index builder: constructs inverted index from HTML documents.
 """
 
+import json
 from pathlib import Path
 from collections import Counter
 
 from .tokenizer import get_tokens_from_html, read_html_file
 from .posting import InvertedIndex, Posting
+
+
+def _read_doc_content(filepath: Path) -> str:
+    """
+    Read document content from a file. Supports:
+    - .html files: raw HTML text
+    - .json files: JSON with a "content" field containing HTML
+    """
+    filepath = Path(filepath)
+    suffix = filepath.suffix.lower()
+    if suffix == ".json":
+        raw = filepath.read_text(encoding="utf-8")
+        data = json.loads(raw)
+        if "content" not in data:
+            raise ValueError(f"JSON file has no 'content' field: {filepath}")
+        return data["content"]
+    return read_html_file(filepath)
 
 
 def build_index_from_directory(
@@ -15,7 +33,8 @@ def build_index_from_directory(
     root_dir: Path | None = None,
 ) -> tuple[InvertedIndex, set[str]]:
     """
-    Build inverted index from all HTML files in a directory (recursive).
+    Build inverted index from all HTML/document files in a directory (recursive).
+    Supports .html files and .json files (with a "content" field containing HTML).
     Returns (index, set of doc_ids).
     Uses path relative to root_dir for doc_id to avoid collisions across subfolders.
     """
@@ -24,13 +43,14 @@ def build_index_from_directory(
     data_dir = Path(data_dir)
     root = Path(root_dir) if root_dir else data_dir
 
-    html_files = list(data_dir.glob("*.html"))
-    if not html_files:
-        html_files = list(data_dir.rglob("*.html"))
+    # Collect .html and .json files (recursive so we find files in subfolders)
+    html_files = list(data_dir.rglob("*.html"))
+    json_files = list(data_dir.rglob("*.json"))
+    doc_files = html_files + json_files
 
-    for filepath in html_files:
+    for filepath in doc_files:
         try:
-            html_content = read_html_file(filepath)
+            html_content = _read_doc_content(filepath)
         except Exception as e:
             print(f"Warning: could not read {filepath}: {e}")
             continue
