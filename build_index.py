@@ -7,9 +7,10 @@ Usage:
 
 Extract developer.zip into the data/ folder, then run this script.
 
-Output:
-  - index.json in the project root
-  - doc_mapping.json (doc_id -> url, fragment stripped)
+Output (developer flavor, partial indexing enabled):
+  - data/index.jsonl          (JSONL inverted index, one term per line)
+  - data/index_lexicon.json   (term -> byte offset in index.jsonl)
+  - data/doc_mapping.json     (doc_id -> URL, fragment stripped)
   - Analytics table printed to console (copy to your PDF report)
 """
 
@@ -24,11 +25,13 @@ from src.index_builder import build_index_with_partials
 
 
 def get_index_path() -> Path:
-    return Path(__file__).resolve().parent / "index.json"
+    base = Path(__file__).resolve().parent
+    return base / "data" / "index.jsonl"
 
 
 def get_doc_mapping_path() -> Path:
-    return Path(__file__).resolve().parent / "doc_mapping.json"
+    base = Path(__file__).resolve().parent
+    return base / "data" / "doc_mapping.json"
 
 
 def main() -> None:

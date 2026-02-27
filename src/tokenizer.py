@@ -7,39 +7,20 @@ Supports stemming (Porter) and extraction of important tokens (title, h1-h3, str
 import re
 import warnings
 from pathlib import Path
+from bs4 import BeautifulSoup, XMLParsedAsHTMLWarning, MarkupResemblesLocatorWarning
+warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
+warnings.filterwarnings("ignore", category=MarkupResemblesLocatorWarning)
 
-try:
-    from bs4 import BeautifulSoup, XMLParsedAsHTMLWarning, MarkupResemblesLocatorWarning
-    warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
-    warnings.filterwarnings("ignore", category=MarkupResemblesLocatorWarning)
-except ImportError:
-    BeautifulSoup = None
+from nltk.stem import PorterStemmer
+from nltk.tokenize import word_tokenize as _nltk_word_tokenize
+from nltk import download as _nltk_download
 
-try:
-    from nltk.stem import PorterStemmer
-    from nltk.tokenize import word_tokenize as _nltk_word_tokenize
-    from nltk import download as _nltk_download
+_STEMMER = PorterStemmer()
+_NLTK_AVAILABLE = True
 
-    _STEMMER = PorterStemmer()
-    _NLTK_AVAILABLE = True
-
-    def _ensure_punkt():
-        # Ensure both tokenizer data packs exist (newer NLTK uses punkt_tab)
-        try:
-            _nltk_download("punkt", quiet=True)
-            _nltk_download("punkt_tab", quiet=True)
-        except Exception:
-            pass
-        try:
-            _nltk_word_tokenize("test")
-        except Exception:
-            _nltk_download("punkt", quiet=True)
-            _nltk_download("punkt_tab", quiet=True)
-except ImportError:
-    _STEMMER = None
-    _NLTK_AVAILABLE = False
-    _nltk_word_tokenize = None
-    _ensure_punkt = None
+def _ensure_punkt():
+    _nltk_download("punkt", quiet=True)
+    _nltk_download("punkt_tab", quiet=True)
 
 
 def stem_token(word: str) -> str:

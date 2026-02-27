@@ -68,11 +68,19 @@ def _flush_partial_index(
             f.write(line)
 
 
-def _merge_partial_indexes(partial_paths: list[Path], output_path: Path) -> None:
+def _merge_partial_indexes(partial_paths: list[Path], output_path: Path) -> int:
     """
-    Merge partial index files (each line: {"term": str, "postings": [[doc_id, tf, tf_imp], ...]}).
-    Assumes each partial has terms sorted; we merge by reading all and merging in memory
-    (for M1 simplicity). For very large indexes a heap merge would be used.
+    Merge partial index files into a final on-disk index.
+
+    Input partial format (JSONL, one object per line):
+        {"term": str, "postings": [[doc_id, tf, tf_imp], ...]}
+
+    Output index format (also JSONL, sorted by term for easier inspection):
+        {"term": str, "postings": [[doc_id, tf, tf_imp], ...]}
+
+    Additionally, create a lexicon file alongside the index that maps each term
+    to its byte offset in the index file. This enables the search component to
+    seek directly to a term's postings without loading the whole index.
     """
     merged: dict[str, list[tuple[int, int, int]]] = {}
     for path in partial_paths:
@@ -90,17 +98,31 @@ def _merge_partial_indexes(partial_paths: list[Path], output_path: Path) -> None
                     merged[term] = []
                 merged[term].extend(postings)
 
-    # Sort postings by doc_id per term and write final index (term -> list of {doc_id, tf, tf_imp})
-    index_dict: dict = {}
-    for term in sorted(merged.keys()):
-        postings = merged[term]
-        postings.sort(key=lambda x: x[0])
-        index_dict[term] = [
-            {"doc_id": doc_id, "tf": tf, "tf_imp": tf_imp}
-            for doc_id, tf, tf_imp in postings
-        ]
+    # Write final index as JSONL and build lexicon (term -> byte offset).
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    lexicon: dict[str, int] = {}
     with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(index_dict, f, indent=2, ensure_ascii=False)
+        for term in sorted(merged.keys()):
+            postings = merged[term]
+            postings.sort(key=lambda x: x[0])
+            offset = f.tell()
+            lexicon[term] = offset
+            line_obj = {
+                "term": term,
+                "postings": [
+                    [doc_id, tf, tf_imp] for doc_id, tf, tf_imp in postings
+                ],
+            }
+            f.write(json.dumps(line_obj, ensure_ascii=False) + "\n")
+
+    # Save lexicon: same directory, "<index_stem>_lexicon.json"
+    lexicon_path = output_path.with_name(output_path.stem + "_lexicon.json")
+    with open(lexicon_path, "w", encoding="utf-8") as lf:
+        json.dump(lexicon, lf, ensure_ascii=False)
+
+    # Return number of unique terms in the final index.
+    return len(merged)
 
 
 def build_index_with_partials(
@@ -190,8 +212,8 @@ def build_index_with_partials(
         _flush_partial_index(in_memory, partial_path)
         partial_paths.append(partial_path)
 
-    # Merge partials into final index
-    _merge_partial_indexes(partial_paths, index_path)
+    # Merge partials into final index and get unique term count
+    num_terms = _merge_partial_indexes(partial_paths, index_path)
 
     # Save doc mapping: doc_id (index) -> url
     with open(doc_mapping_path, "w", encoding="utf-8") as f:
@@ -208,8 +230,7 @@ def build_index_with_partials(
     except OSError:
         pass
 
-    index_dict = json.loads(index_path.read_text(encoding="utf-8"))
-    return len(doc_id_to_url), len(index_dict)
+    return len(doc_id_to_url), num_terms
 
 
 def build_index_from_directory(
