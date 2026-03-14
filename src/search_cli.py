@@ -90,7 +90,7 @@ class DiskIndexReader:
         ]
 
 
-# Acronym/query expansions for ICS/UCI corpus
+# Acronym expansions for ICS/UCI corpus
 ACRONYM_MAP = {
     # clubs
     "acm": "association of computer machinery",
@@ -101,7 +101,7 @@ ACRONYM_MAP = {
     # location
     "uci": "university of california irvine",
     "uc irvine": "university of california irvine",
-    # synonyms / person
+    # synonyms / abbr
     "undergrad": "undergraduate",
     "ugrad": "undergraduate",
     "shindler": "professor shindler",
