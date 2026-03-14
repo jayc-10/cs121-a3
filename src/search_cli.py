@@ -1,5 +1,5 @@
 """
-Search component (M2) for the developer flavor search engine.
+Search component for developer flavor search engine.
 
 Requirements satisfied:
 - Uses the same stemming/tokenization as the indexer.
@@ -165,6 +165,48 @@ def rank_documents_tf_idf(
     return ranked
 
 
+def run_single_query(
+    reader: "DiskIndexReader",
+    doc_id_to_url: list,
+    raw_query: str,
+    top_k: int = 10,
+) -> list[Tuple[int, str, float]]:
+    """
+    Run a single query, return list of (rank, url, score).
+    """
+    N_docs = len(doc_id_to_url)
+    query_terms = normalize_query(raw_query)
+    if not query_terms:
+        return []
+
+    postings_by_term: Dict[str, List[PostingEntry]] = {}
+    for term in query_terms:
+        postings_by_term[term] = reader.get_postings(term)
+
+    non_empty_lists = [pl for pl in postings_by_term.values() if pl]
+    if not non_empty_lists:
+        return []
+
+    intersection = intersect_postings_and(non_empty_lists)
+    if not intersection:
+        return []
+
+    allowed_doc_ids = {p.doc_id for p in intersection}
+    filtered_by_term: Dict[str, List[PostingEntry]] = {}
+    for term, postings in postings_by_term.items():
+        filtered_by_term[term] = [p for p in postings if p.doc_id in allowed_doc_ids]
+
+    ranked = rank_documents_tf_idf(filtered_by_term, N_docs=N_docs)
+    if not ranked:
+        return []
+
+    results: list[Tuple[int, str, float]] = []
+    for rank, (doc_id, score) in enumerate(ranked[:top_k], start=1):
+        url = doc_id_to_url[doc_id] if 0 <= doc_id < len(doc_id_to_url) else f"<doc {doc_id}>"
+        results.append((rank, url, score))
+    return results
+
+
 def run_search_loop(
     index_path: Path,
     lexicon_path: Path,
@@ -192,41 +234,12 @@ def run_search_loop(
             if not raw_query:
                 break
 
-            query_terms = normalize_query(raw_query)
-            if not query_terms:
-                print("No valid terms in query.")
-                continue
-
-            # Fetch postings per term from disk.
-            postings_by_term: Dict[str, List[PostingEntry]] = {}
-            for term in query_terms:
-                postings_by_term[term] = reader.get_postings(term)
-
-            # AND intersection (boolean retrieval requirement).
-            non_empty_lists = [pl for pl in postings_by_term.values() if pl]
-            if not non_empty_lists:
+            results = run_single_query(reader, doc_id_to_url, raw_query, top_k)
+            if not results:
                 print("No documents matched the query.")
                 continue
-
-            intersection = intersect_postings_and(non_empty_lists)
-            if not intersection:
-                print("No documents matched all query terms.")
-                continue
-
-            # For ranking, restrict to docs that are in the AND intersection.
-            allowed_doc_ids = {p.doc_id for p in intersection}
-            filtered_by_term: Dict[str, List[PostingEntry]] = {}
-            for term, postings in postings_by_term.items():
-                filtered_by_term[term] = [p for p in postings if p.doc_id in allowed_doc_ids]
-
-            ranked = rank_documents_tf_idf(filtered_by_term, N_docs=N_docs)
-            if not ranked:
-                print("Matched documents, but could not rank them.")
-                continue
-
-            print(f"Top {min(top_k, len(ranked))} results:")
-            for rank, (doc_id, score) in enumerate(ranked[:top_k], start=1):
-                url = doc_id_to_url[doc_id] if 0 <= doc_id < len(doc_id_to_url) else f"<doc {doc_id}>"
+            print(f"Top {len(results)} results:")
+            for rank, url, score in results:
                 print(f"{rank:2d}. score={score:.4f}  {url}")
 
     finally:
