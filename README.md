@@ -33,7 +33,7 @@ If `doc_mapping.json` is in the project root:
 python -m src.search_cli --docmap doc_mapping.json
 ```
 
-Enter queries (AND semantics). Results are ranked by tf-idf with important-token boost.
+Enter queries (AND semantics). Results are ranked by tf-idf with important-token and URL path boost.
 
 ## Project Structure
 
@@ -44,10 +44,9 @@ a3/
 │   ├── index_builder.py # Partial indexing, merge, stemming, important-token boost
 │   ├── tokenizer.py     # HTML parsing, tokenization, stemming (Porter)
 │   ├── posting.py       # Posting / InvertedIndex
-│   └── search_cli.py    # Search: AND + tf-idf
-├── data/                # developer.zip extracted here
-│   ├── index.jsonl
-│   ├── index_lexicon.json
-│   └── doc_mapping.json
-└── M3_TEST_QUERIES.md   # Evaluation queries and improvements
+│   └── search_cli.py    # Search: AND + tf-idf + URL path boost
+└── data/                # developer.zip extracted here
+    ├── index.jsonl
+    ├── index_lexicon.json
+    └── doc_mapping.json
 ```
