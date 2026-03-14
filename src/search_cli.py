@@ -88,10 +88,24 @@ class DiskIndexReader:
         ]
 
 
+# Acronym expansions for ICS/UCI corpus (clubs orgs)
+ACRONYM_MAP = {
+    "acm": "association of computer machinery",
+    "ctc": "commit the change",
+    "icssc": "ics student council",
+    "vgdc": "video game development club",
+    "wics": "women in information and computer sciences",
+}
+
+
 def normalize_query(raw_query: str) -> List[str]:
     """
     Tokenize and stem the raw query string using the same logic as indexing.
+    Expands known acronyms before tokenization.
     """
+    q = raw_query.strip().lower()
+    if q in ACRONYM_MAP:
+        raw_query = ACRONYM_MAP[q]
     tokens = tokenize(raw_query)
     return stem_tokens(tokens)
 
