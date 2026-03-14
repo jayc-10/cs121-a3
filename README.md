@@ -1,6 +1,6 @@
-# Search Engine - Milestone 1: Index Construction
+# CS 121 Assignment 3: Search Engine
 
-CS 121 Assignment 3 - Inverted index builder for HTML document collections.
+Inverted index search engine over the UCI ICS developer corpus (JSON documents with embedded HTML).
 
 ## Setup
 
@@ -8,50 +8,46 @@ CS 121 Assignment 3 - Inverted index builder for HTML document collections.
 pip install -r requirements.txt
 ```
 
-## Data
-
-Extract `developer.zip` into the `data/` folder. The script will recursively find all HTML files (e.g. `data/DEV/.../*.html`).
-
 ## Build the Index
+
+1. Extract `developer.zip` into the `data/` folder.
+2. Run:
 
 ```bash
 python build_index.py
 ```
 
-Options:
+**Output (developer flavor):**
+- `data/index.jsonl` — inverted index (JSONL, one term per line)
+- `data/index_lexicon.json` — term → byte offset (for low-memory search)
+- `data/doc_mapping.json` — doc_id → URL
 
-- `--output path`   Custom output path for `index.json`
+## Search
 
-## Output
+```bash
+python -m src.search_cli --index data/index.jsonl --lexicon data/index_lexicon.json --docmap data/doc_mapping.json
+```
 
-1. **index.json** - The inverted index on disk (token → list of {doc_id, tf})
-2. **Analytics** - Printed to console for your PDF report:
-   - Number of indexed documents
-   - Number of unique tokens
-   - Total size of index (KB)
+If `doc_mapping.json` is in the project root:
+```bash
+python -m src.search_cli --docmap doc_mapping.json
+```
 
-Copy the analytics table into your report.
+Enter queries (AND semantics). Results are ranked by tf-idf with important-token boost.
 
 ## Project Structure
 
 ```
 a3/
-├── build_index.py      # Main script
-├── requirements.txt
-├── data/               # Extract developer.zip here
+├── build_index.py       # Index construction
 ├── src/
-│   ├── tokenizer.py    # HTML parsing, tokenization
-│   ├── posting.py      # Posting & InvertedIndex
-│   └── index_builder.py
-└── index.json          # Generated index
+│   ├── index_builder.py # Partial indexing, merge, stemming, important-token boost
+│   ├── tokenizer.py     # HTML parsing, tokenization, stemming (Porter)
+│   ├── posting.py       # Posting / InvertedIndex
+│   └── search_cli.py    # Search: AND + tf-idf
+├── data/                # developer.zip extracted here
+│   ├── index.jsonl
+│   ├── index_lexicon.json
+│   └── doc_mapping.json
+└── M3_TEST_QUERIES.md   # Evaluation queries and improvements
 ```
-
-## Report
-
-Include a PDF with a table containing (minimum):
-
-| Metric | Value |
-|--------|-------|
-| Number of indexed documents | ... |
-| Number of unique tokens | ... |
-| Total size of index (KB) | ... |
