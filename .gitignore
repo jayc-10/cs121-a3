@@ -1,8 +1,9 @@
 # Data (extracted from developer.zip - do not commit)
 data/
 
-# Generated index
+# Generated index and doc mapping (regenerable via build_index.py)
 index.json
+doc_mapping.json
 
 # Python
 __pycache__/
