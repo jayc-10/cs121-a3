@@ -28,6 +28,8 @@ from typing import Dict, Iterable, List, Tuple
 from .tokenizer import tokenize, stem_tokens
 from .index_builder import IMPORTANT_BOOST
 
+URL_BOOST = 1.5  # Bonus when query term appears in document URL
+
 
 @dataclass
 class PostingEntry:
@@ -88,7 +90,7 @@ class DiskIndexReader:
         ]
 
 
-# Acronym expansions for ICS/UCI corpus
+# Acronym/query expansions for ICS/UCI corpus
 ACRONYM_MAP = {
     # clubs
     "acm": "association of computer machinery",
@@ -99,6 +101,10 @@ ACRONYM_MAP = {
     # location
     "uci": "university of california irvine",
     "uc irvine": "university of california irvine",
+    # synonyms / person
+    "undergrad": "undergraduate",
+    "ugrad": "undergraduate",
+    "shindler": "professor shindler",
 }
 
 
@@ -156,17 +162,18 @@ def intersect_postings_and(
 def rank_documents_tf_idf(
     postings_by_term: Dict[str, List[PostingEntry]],
     N_docs: int,
+    doc_id_to_url: list | None = None,
+    url_terms: list[str] | None = None,
 ) -> List[Tuple[int, float]]:
     """
-    Rank documents using a simple tf-idf style score that also boosts important tokens.
+    Rank documents using tf-idf + important-token boost + URL boost.
 
     Score(d) = sum_{t in query} ( (tf_body + IMPORTANT_BOOST * tf_imp) * idf(t) )
-    where idf(t) = log(1 + N / (1 + df_t))
+    + URL_BOOST per query term that appears in the document URL
     """
     if N_docs <= 0:
         return []
 
-    # Compute document scores
     scores: Dict[int, float] = {}
     for term, postings in postings_by_term.items():
         if not postings:
@@ -178,6 +185,17 @@ def rank_documents_tf_idf(
             if weight <= 0:
                 continue
             scores[p.doc_id] = scores.get(p.doc_id, 0.0) + weight * idf
+
+    # URL boost: favor docs whose URL contains query terms
+    if doc_id_to_url and url_terms:
+        url_lower = {t.lower() for t in url_terms}
+        for doc_id in list(scores.keys()):
+            if 0 <= doc_id < len(doc_id_to_url):
+                url = (doc_id_to_url[doc_id] or "").lower()
+                for term in url_lower:
+                    if term in url:
+                        scores[doc_id] += URL_BOOST
+                        break
 
     ranked = sorted(scores.items(), key=lambda x: x[1], reverse=True)
     return ranked
@@ -193,7 +211,10 @@ def run_single_query(
     Run a single query, return list of (rank, url, score).
     """
     N_docs = len(doc_id_to_url)
-    query_terms = normalize_query(raw_query)
+    q = raw_query.strip().lower()
+    expanded = ACRONYM_MAP.get(q, raw_query)
+    url_terms = tokenize(expanded)
+    query_terms = stem_tokens(url_terms) if url_terms else []
     if not query_terms:
         return []
 
@@ -214,7 +235,10 @@ def run_single_query(
     for term, postings in postings_by_term.items():
         filtered_by_term[term] = [p for p in postings if p.doc_id in allowed_doc_ids]
 
-    ranked = rank_documents_tf_idf(filtered_by_term, N_docs=N_docs)
+    ranked = rank_documents_tf_idf(
+        filtered_by_term, N_docs=N_docs,
+        doc_id_to_url=doc_id_to_url, url_terms=url_terms,
+    )
     if not ranked:
         return []
 
