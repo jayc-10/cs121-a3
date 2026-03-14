@@ -88,13 +88,17 @@ class DiskIndexReader:
         ]
 
 
-# Acronym expansions for ICS/UCI corpus (clubs orgs)
+# Acronym expansions for ICS/UCI corpus
 ACRONYM_MAP = {
+    # clubs
     "acm": "association of computer machinery",
     "ctc": "commit the change",
     "icssc": "ics student council",
     "vgdc": "video game development club",
     "wics": "women in information and computer sciences",
+    # location
+    "uci": "university of california irvine",
+    "uc irvine": "university of california irvine",
 }
 
 
