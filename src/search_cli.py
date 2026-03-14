@@ -22,6 +22,7 @@ import argparse
 import json
 import math
 from dataclasses import dataclass
+from urllib.parse import urlparse
 from pathlib import Path
 from typing import Dict, Iterable, List, Tuple
 
@@ -186,14 +187,16 @@ def rank_documents_tf_idf(
                 continue
             scores[p.doc_id] = scores.get(p.doc_id, 0.0) + weight * idf
 
-    # URL boost: favor docs whose URL contains query terms
+    # URL boost: favor docs whose URL path contains query terms (not domain)
     if doc_id_to_url and url_terms:
         url_lower = {t.lower() for t in url_terms}
         for doc_id in list(scores.keys()):
             if 0 <= doc_id < len(doc_id_to_url):
-                url = (doc_id_to_url[doc_id] or "").lower()
+                raw_url = doc_id_to_url[doc_id] or ""
+                parsed = urlparse(raw_url)
+                path = (parsed.path or "").lower()
                 for term in url_lower:
-                    if term in url:
+                    if term in path:
                         scores[doc_id] += URL_BOOST
                         break
 
